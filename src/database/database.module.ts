@@ -20,7 +20,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           ca: configService.get<string>('DB_CA_CERT')?.replace(/\\n/g, '\n'),
         },
         autoLoadEntities: true,
-        synchronize: true, // Set to false in production
+        synchronize: false,
       }),
     }),
   ],
