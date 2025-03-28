@@ -8,7 +8,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   app.useGlobalFilters(new HttpExceptionFilter());
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: configService.get<string>('CORS_ORIGIN') || '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
