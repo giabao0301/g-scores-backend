@@ -1,6 +1,6 @@
 export class TopStudentDTO {
   sbd: string;
-  subjects: Record<string, number>; // Store subject scores dynamically
+  subjects: Record<string, number>;
   total: number;
 
   constructor(sbd: string, subjectScores: Record<string, number>) {

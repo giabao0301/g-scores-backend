@@ -9,7 +9,7 @@ import { Score } from '../scores/entities/score.entity';
 @Injectable()
 export class SeederService implements OnModuleInit {
   private readonly logger = new Logger(SeederService.name);
-  private readonly batchSize = 10000;
+  private readonly batchSize = 5000;
 
   constructor(
     @InjectRepository(Score) private scoreRepository: Repository<Score>,

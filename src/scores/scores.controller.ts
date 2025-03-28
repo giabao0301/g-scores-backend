@@ -1,7 +1,15 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { ScoresService } from './scores.service';
-import { ApiResponse } from 'src/common/api-response.dto';
-import { ScoreStatisticsDTO } from './entities/dto/score-statistics.dto';
+import { ApiResponse, PageResponse } from 'src/common/api-response.dto';
+import { Score } from './entities/score.entity';
+import { ScoreRange } from './entities/dto/scoreRange.dto';
 
 @Controller('api/v1/scores')
 export class ScoresController {
@@ -13,49 +21,53 @@ export class ScoresController {
     @Query('size') size: number = 10,
     @Query('sortBy') sortBy: string = 'sbd',
     @Query('order') order: 'ASC' | 'DESC' = 'ASC',
-  ): Promise<ApiResponse<any>> {
-    return this.scoresService.findAll(
-      Number(page),
-      Number(size),
-      sortBy,
-      order,
+  ): Promise<ApiResponse<PageResponse<Score>>> {
+    const scores = await this.scoresService.findAll(page, size, sortBy, order);
+    return new ApiResponse<PageResponse<Score>>(
+      true,
+      200,
+      'Get all scores successfully',
+      scores,
     );
   }
 
-  // @Get(':sbd')
-  // async getScoreBySbd(@Param('sbd') sbd: string): Promise<ApiResponse<Score>> {
-  //   if (sbd.length !== 8) {
-  //     throw new BadRequestException('Invalid registration number format.');
-  //   }
+  @Get(':sbd')
+  async getScoreBySbd(@Param('sbd') sbd: string): Promise<ApiResponse<Score>> {
+    if (sbd.length !== 8) {
+      throw new BadRequestException('Invalid registration number format.');
+    }
 
-  //   const score = await this.scoresService.findBySbd(sbd);
+    const score = await this.scoresService.findBySbd(sbd);
 
-  //   if (!score) {
-  //     throw new NotFoundException(
-  //       `Score not found for registration number: ${sbd}`,
-  //     );
-  //   }
-  //   return new ApiResponse<Score>(
-  //     true,
-  //     'Get score by registration number successfully',
-  //     score,
-  //   );
-  // }
-
-  @Get('/stats')
-  async getScoreStatistics(
-    @Query('subject') subject?: string,
-  ): Promise<ApiResponse<ScoreStatisticsDTO>> {
-    return new ApiResponse<ScoreStatisticsDTO>(
+    if (!score) {
+      throw new NotFoundException(
+        `Score not found for registration number: ${sbd}`,
+      );
+    }
+    return new ApiResponse<Score>(
       true,
-      'Get score statistics successfully',
+      200,
+      'Get score by registration number successfully',
+      score,
+    );
+  }
+
+  @Get('/stats/:subject')
+  async getScoreStatistics(
+    @Param('subject') subject: string,
+  ): Promise<ApiResponse<ScoreRange[]>> {
+    return new ApiResponse<ScoreRange[]>(
+      true,
+      200,
+      'Get score statistics by subject successfully',
       await this.scoresService.getScoreStatistics(subject),
     );
   }
 
-  @Get('top')
+  @Get('top/:group')
   async getTopStudents(
-    @Query('group') group: string,
+    @Param('group') group: string,
+    @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<any>> {
     const subjectGroups: Record<string, string[]> = {
       A: ['toan', 'vat_li', 'hoa_hoc'],
@@ -66,14 +78,17 @@ export class ScoresController {
 
     const subjects = subjectGroups[group] ?? null;
 
-    // if (!subjects) {
-    //   return { message: 'Invalid group. Supported: A, B, C, D' };
-    // }
+    if (!subjects) {
+      throw new BadRequestException(
+        'Invalid group. Valid groups are A, B, C, D.',
+      );
+    }
 
     return new ApiResponse(
       true,
-      'Get top students successfully',
-      await this.scoresService.getTopStudents(subjects),
+      200,
+      'Get top 10 students successfully',
+      await this.scoresService.getTopStudents(subjects, limit),
     );
   }
 }

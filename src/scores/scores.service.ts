@@ -2,11 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Score } from './entities/score.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ApiResponse } from 'src/common/api-response.dto';
-import {
-  ScoreStatisticsDTO,
-  SubjectStatisticsDTO,
-} from './entities/dto/score-statistics.dto';
+import { PageResponse } from 'src/common/api-response.dto';
+import { ScoreRange } from './entities/dto/scoreRange.dto';
 
 @Injectable()
 export class ScoresService {
@@ -19,7 +16,7 @@ export class ScoresService {
     size: number = 10,
     sortBy: string = 'sbd',
     order: 'ASC' | 'DESC' = 'ASC',
-  ) {
+  ): Promise<PageResponse<Score>> {
     const offset = (page - 1) * size;
 
     const [scores, total] = await this.scoreRepository.findAndCount({
@@ -27,16 +24,14 @@ export class ScoresService {
       skip: offset,
       order: { [sortBy]: order.toUpperCase() as 'ASC' | 'DESC' },
     });
-    return new ApiResponse<Score[]>(
-      true,
-      'Scores retrieved successfully',
+
+    const totalPages = Math.ceil(total / size);
+    return new PageResponse<Score>(
+      totalPages,
+      offset,
+      Number(size),
+      total,
       scores,
-      {
-        total,
-        page,
-        totalPages: Math.ceil(total / size),
-        size,
-      },
     );
   }
 
@@ -44,57 +39,75 @@ export class ScoresService {
     return await this.scoreRepository.findOne({ where: { sbd } });
   }
 
-  async getScoreStatistics(subject?: string): Promise<ScoreStatisticsDTO> {
-    const subjects = subject
-      ? [subject]
-      : [
-          'toan',
-          'ngu_van',
-          'ngoai_ngu',
-          'vat_li',
-          'hoa_hoc',
-          'sinh_hoc',
-          'lich_su',
-          'dia_li',
-          'gdcd',
-        ];
+  async getScoreStatistics(subject: string): Promise<ScoreRange[]> {
+    const ranges = ['<4', '4-6', '6-8', '8-10'];
 
-    const statistics: ScoreStatisticsDTO = {};
+    const stats: ScoreRange[] = [];
 
-    for (const sub of subjects) {
-      statistics[sub] = {
-        '8-10': await this.scoreRepository
-          .createQueryBuilder('score')
-          .where(`score.${sub} >= :min AND score.${sub} <= :max`, {
-            min: 8,
-            max: 10,
-          })
-          .getCount(),
-
-        '6-8': await this.scoreRepository
-          .createQueryBuilder('score')
-          .where(`score.${sub} >= :min AND score.${sub} < :max`, {
-            min: 6,
-            max: 8,
-          })
-          .getCount(),
-
-        '4-6': await this.scoreRepository
-          .createQueryBuilder('score')
-          .where(`score.${sub} >= :min AND score.${sub} < :max`, {
-            min: 4,
-            max: 6,
-          })
-          .getCount(),
-
-        '<4': await this.scoreRepository
-          .createQueryBuilder('score')
-          .where(`score.${sub} < :max`, { max: 4 })
-          .getCount(),
-      } as SubjectStatisticsDTO;
+    for (const range of ranges) {
+      switch (range) {
+        case '<4':
+          stats.push(
+            new ScoreRange(
+              range,
+              await this.scoreRepository
+                .createQueryBuilder('score')
+                .where(`score.${subject} < :max`, { max: 4 })
+                .getCount(),
+            ),
+          );
+          break;
+        case '4-6':
+          stats.push(
+            new ScoreRange(
+              range,
+              await this.scoreRepository
+                .createQueryBuilder('score')
+                .where(`score.${subject} >= :min AND score.${subject} < :max`, {
+                  min: 4,
+                  max: 6,
+                })
+                .getCount(),
+            ),
+          );
+          break;
+        case '6-8':
+          stats.push(
+            new ScoreRange(
+              range,
+              await this.scoreRepository
+                .createQueryBuilder('score')
+                .where(`score.${subject} >= :min AND score.${subject} < :max`, {
+                  min: 6,
+                  max: 8,
+                })
+                .getCount(),
+            ),
+          );
+          break;
+        case '8-10':
+          stats.push(
+            new ScoreRange(
+              range,
+              await this.scoreRepository
+                .createQueryBuilder('score')
+                .where(
+                  `score.${subject} >= :min AND score.${subject} <= :max`,
+                  {
+                    min: 8,
+                    max: 10,
+                  },
+                )
+                .getCount(),
+            ),
+          );
+          break;
+        default:
+          break;
+      }
     }
 
-    return statistics;
+    return stats;
   }
 
   async getTopStudents(
