@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     container_name: postgres
@@ -14,6 +16,11 @@ services:
     networks:
       - postgres
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d thpt2024"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
 
   pgadmin:
     container_name: pgadmin
@@ -29,6 +36,34 @@ services:
     networks:
       - postgres
     restart: unless-stopped
+
+  backend:
+    container_name: g-scores-api
+    image: giabao144/g-scores-api:latest
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=thpt2024
+      - PORT=8080
+      - CORS_ORIGIN=http://localhost:3000
+      - NODE_ENV=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  frontend:
+    container_name: g-scores-frontend
+    image: giabao144/g-scores-frontend:latest
+    environment:
+      - NEXT_PUBLIC_API_URL=http://g-scores-api:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
 networks:
   postgres:

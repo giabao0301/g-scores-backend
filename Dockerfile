@@ -1,23 +1,18 @@
-# Use the official Node.js image as the base image
-FROM node:20
+# Use Node.js LTS version
+FROM node:18-alpine
 
-# Set the working directory inside the container
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
-
-# Install the application dependencies
+# Copy package.json and install dependencies
+COPY package.json package-lock.json ./
 RUN npm install
 
-# Copy the rest of the application files
+# Copy the entire source code
 COPY . .
-
-# Build the NestJS application
-RUN npm run build
 
 # Expose the application port
 EXPOSE 8080
 
-# Command to run the application
-CMD ["node", "dist/main"]
+# Start the NestJS application
+CMD ["npm", "run", "start:dev"]
