@@ -1,13 +1,12 @@
-version: '3.8'
-
 services:
   postgres:
     container_name: postgres
     image: postgres:14.1
+    env_file: .env
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: thpt2024
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
@@ -17,7 +16,7 @@ services:
       - postgres
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d thpt2024"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       retries: 5
       start_period: 10s
@@ -25,9 +24,10 @@ services:
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
+    env_file: .env
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
       - pgadmin:/var/lib/pgadmin
@@ -40,15 +40,16 @@ services:
   backend:
     container_name: g-scores-api
     image: giabao144/g-scores-api:latest
+    env_file: .env
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=thpt2024
-      - PORT=8080
-      - CORS_ORIGIN=http://localhost:3000
-      - NODE_ENV=development
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - PORT=${PORT}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - NODE_ENV=${NODE_ENV}
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,8 +61,9 @@ services:
   frontend:
     container_name: g-scores-frontend
     image: giabao144/g-scores-frontend:latest
+    env_file: .env
     environment:
-      - NEXT_PUBLIC_API_URL=http://g-scores-api:8080
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     ports:
       - "3000:3000"
     depends_on:
