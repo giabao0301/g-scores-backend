@@ -40,7 +40,7 @@ DB_PASSWORD=${POSTGRES_PASSWORD}
 DB_NAME=thpt2024
 
 # Backend Configuration
-PORT=8080
+API_PORT=8080
 CORS_ORIGIN=http://localhost:3000
 NODE_ENV=development
 
