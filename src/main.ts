@@ -12,7 +12,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-  const port = configService.get<number>('PORT') || 8081;
+  const port = configService.get<number>('API_PORT') || 8081;
   await app.listen(port);
 }
 bootstrap();
