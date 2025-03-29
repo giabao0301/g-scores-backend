@@ -54,7 +54,9 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
-
+    networks:
+      - postgres
+      
   frontend:
     container_name: g-scores-frontend
     image: giabao144/g-scores-frontend:latest

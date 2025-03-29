@@ -1,18 +1,18 @@
-# Use Node.js LTS version
-FROM node:18-alpine
+FROM node:20-bullseye
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
-# Copy the entire source code
+# Copy the rest of the application
 COPY . .
 
 # Expose the application port
 EXPOSE 8080
 
-# Start the NestJS application
+# Start the application
 CMD ["npm", "run", "start:dev"]
