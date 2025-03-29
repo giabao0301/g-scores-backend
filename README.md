@@ -5,8 +5,7 @@ This project allows users to check THPT 2024 exam scores, view reports, and anal
 - **Backend:** NestJS (Node.js)
 - **Database:** PostgreSQL
 - **Containerization:** Docker & Docker Compose
-
-## 🌐Live Demo: https://g-scores-frontend.vercel.app
+- **🌐Live Demo:** https://g-scores-frontend.vercel.app
 
 ## 🚀 Getting Started
 
@@ -76,7 +75,7 @@ docker logs -f g-scores-api
 ``` 
 
 
-## 🛑 Stopping the Application
+### 🛑 Stopping the Application
 To stop the containers, run:
 ```sh
 docker-compose down
